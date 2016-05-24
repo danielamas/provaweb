@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<script type="text/javascript" src="js/jquery-1.12.4.min.js"></script>
+<script type="text/javascript">
+var movie;
+
+function getParam() {
+	var result = {}; 
+	var keyValues = location.search.slice(1).split("&");
+	keyValues.forEach(function(keyValue) {
+		keyValue = keyValue.split('=');
+	     result[decodeURIComponent(keyValue[0])] = decodeURIComponent(keyValue[1]) || '';
+	});
+	getMovies(result["movieId"]);
+}
+
+function getMovies(imdbId){
+	$.ajax({
+		type:'POST',
+		url: '/movieserver/rest/action/searchFilmeById',
+		data : {'imdbId': imdbId},
+		headers: {
+			Accept : "application/json; charset=utf-8",
+			"Content-Type" : "application/json; charset=utf-8"
+		},
+		success: function(result) {
+			movie = result;
+			if(document.getElementById('loading')) {
+				document.getElementById('loading').style.display = "none";
+			}
+			document.getElementById('title').value = movie.title;
+			document.getElementById('year').value = movie.year;
+			document.getElementById('type').value = movie.type;
+			document.getElementById('released').value = movie.released;
+			document.getElementById('genre').value = movie.genre;
+		},
+		error: function() {
+			movie = "";
+			if(document.getElementById('loading')) {
+				document.getElementById('loading').style.display = "none";
+			}
+			document.getElementById('bodyTable').innerHTML = '<tr><td>vazio</td><td>vazio</td></tr>';
+		}
+	});
+}
+
+function saveBD() {
+	document.getElementById('msg').style.display = "none";
+	
+	var title = "empty";
+	if(document.getElementById('title')) {
+		title = document.getElementById('title').value;
+	}
+
+	var year = "empty";
+	if(document.getElementById('year')) {
+		year = document.getElementById('year').value;
+	}
+
+	var type = "empty";
+	if(document.getElementById('type')) {
+		type = document.getElementById('type').value;
+	}
+
+	var released = "empty";
+	if(document.getElementById('released')) {
+		released = document.getElementById('released').value;
+	}
+
+	var genre = "empty";
+	if(document.getElementById('genre')) {
+		genre = document.getElementById('genre').value;
+	}
+
+	var imdbID = "";
+	if(movie.imdbID) {
+		imdbID = movie.imdbID;
+	}
+
+	var idBD = "";
+	if(movie.id) {
+		idBD = movie.id;
+	}
+	
+	$.ajax({
+		type:'put',
+		url: '/movieserver/rest/action',
+		dataType: 'json',
+		data : {'idBD': idBD, 'imdbID': imdbID, 'title': title, 'year': year, 'type': type, 'released': released, 'genre': genre},
+		headers: { 
+	        'Accept': 'application/json',
+	        'Content-Type': 'application/json' 
+	    },
+		success: function(result) {
+			movie = result;
+			document.getElementById('btSave').style.display = "none";
+			if(movie != "") {
+				if(document.getElementById('loadingSave')) {
+					document.getElementById('loadingSave').style.display = "none";
+				}
+				document.getElementById('msg').style.display = "";
+				document.getElementById('msg').innerHTML = "Salvo com sucesso!!!";
+				
+			} else {
+				document.getElementById('msg').style.display = "";
+				document.getElementById('msg').innerHTML = "Erro! Não foi possível salvar!!!";
+			}
+		},
+		error: function() {
+			movie = "";
+			document.getElementById('btSave').style.display = "none";
+			if(document.getElementById('loadingSave')) {
+				document.getElementById('loadingSave').style.display = "none";
+			}
+			document.getElementById('msg').style.display = "";
+			document.getElementById('msg').innerHTML = "Erro! Não foi possível salvar!!!";
+			document.getElementById('bodyTable').innerHTML = '<tr><td>vazio</td><td>vazio</td></tr>';
+		}
+	});
+}
+
+function redirectBack() {
+	window.location = window.location.protocol + "//" + window.location.host + "/" + 
+		'movieclient/movieDetail.html?movieId=' + movie.imdbID;
+}
+</script>
+	<head>
+		<meta charset="UTF-8">
+		<title>Detalhes</title>
+	</head>
+	<body>
+		<table>
+			<thead>
+				<tr>
+					<th>
+						<img id="loading" src="img/ajax-loader.gif"> Editar
+					</th>
+				</tr>
+			</thead>
+			<tbody id="bodyTable">
+				<tr>
+					<td>Titulo:</td>
+					<td>
+						<input id="title" type="text" name="title">
+					</td>
+				</tr>
+				<tr>
+					<td>Ano:</td>
+					<td>
+						<input id="year" type="text" name="title">
+					</td>
+				</tr>
+				<tr>
+					<td>Tipo:</td>
+					<td>
+						<input id="type" type="text" name="title">
+					</td>
+				</tr>
+				<tr>
+					<td>Lan&#231ado em:</td>
+					<td>
+						<input id="released" type="text" name="title">
+					</td>
+				</tr>
+				<tr>
+					<td>G&ecirc;nero:</td>
+					<td>
+						<input id="genre" type="text" name="title">
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		<button onclick="redirectBack();" type="button">&lt;&lt;</button>
+		<img id="loadingSave" src="img/ajax-loader.gif" style="display:none;">
+		<button id="btSave" onclick="saveBD();" type="button">Salvar</button>
+		<span id="msg" style="display:none;"></span>
+	</body>
+	<script>
+		getParam();
+	</script>
+</html>

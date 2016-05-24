@@ -1,0 +1,52 @@
+<project basedir="." name="Client-Side">
+	<property name="root" value="../.."/>
+	<property name="root-webapp" value="web"/>
+	<property name="build" value="build"/>
+	<property name="build.compile" value="build/movieclient"/>
+	<property name="war.deploy" value="F:/RESTFul/apache-tomcat-7.0.69/webapps"/>
+
+	<path id="build.classpath">
+		<fileset dir="${root}/lib/clientLib">
+			<include name="*.jar"/>
+		</fileset>
+	</path>
+
+	<target name="cleanAll" description="Deletes the build dir.">
+		<delete dir="build"/>
+		<delete file="${war.deploy}/movieclient.war" dir="${war.deploy}/movieclient"/>
+	</target>
+
+	<target name="compile" description="Compiles webapp.">
+		<mkdir dir="${build.compile}"/>
+		<mkdir dir="${build.compile}/WEB-INF/lib"/>
+		<mkdir dir="${build.compile}/WEB-INF/lib/clientLib"/>
+
+		<copy todir="${build.compile}">
+			<fileset dir="${root-webapp}">
+				<include name="**/*"/>
+			</fileset>
+		</copy>
+		<copy todir="${build.compile}/WEB-INF/lib/clientLib">
+			<fileset dir="${root}/lib/clientLib">
+				<include name="*.jar"/>
+			</fileset>
+		</copy>
+		
+	</target>
+
+	<target name="generateWAR" depends="compile" description="Generates WAR file">
+		<jar destfile="${build}/movieclient.war">
+			<zipfileset dir="${build.compile}"/>
+		</jar>
+	</target>
+
+	<target name="deploy" depends="generateWAR" description="Deploy WAR file">
+		<copy todir="${war.deploy}" file="${build}/movieclient.war" />
+	</target>
+
+	<target name="deploy-exploded" depends="compile" description="Deploy WAR dir">
+		<copy todir="${war.deploy}/movieclient">
+			<fileset dir="${build.compile}"/>
+		</copy>
+	</target>
+</project>

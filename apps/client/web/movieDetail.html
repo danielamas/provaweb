@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<script type="text/javascript" src="js/jquery-1.12.4.min.js"></script>
+<script type="text/javascript">
+var movie;
+function getMovies(imdbID){
+	document.getElementById('bodyTable').innerHTML = "";
+	$.ajax({
+		type:'POST',
+		url: '/movieserver/rest/action/searchFilmeById',
+		data : {'imdbID': imdbID},
+		headers: {
+			Accept : "application/json; charset=utf-8",
+			"Content-Type" : "application/json; charset=utf-8"
+		},
+		success: function(result) {
+			movie = result;
+			if(document.getElementById('loading')) {
+				document.getElementById('loading').style.display = "none";
+			}
+			if(document.getElementById('linkEdit')) {
+				document.getElementById('linkEdit').style.display = "";
+				document.getElementById('linkEdit').href = 'movieEdit.html?movieId='+ movie.imdbID;
+			}
+			if(movie.id) {
+				if(document.getElementById('linkDelete')) {
+					document.getElementById('linkDelete').style.display = "";
+				}
+			}
+			
+			if(document.getElementById('bodyTable')) {
+				document.getElementById('bodyTable').innerHTML = 
+					'<tr>'+
+						'<td>Titulo: </td>'+
+						'<td id="title">' + movie.title + '</td>'+
+					'</tr>'+
+					'<tr>'+
+						'<td>Ano: </td>'+
+						'<td id="year">' + movie.year + '</td>'+
+					'</tr>'+
+					'<tr>'+
+						'<td>Tipo: </td>'+
+						'<td id="type">' + movie.type + '</td>'+
+					'</tr>'+
+					'<tr>'+
+						'<td>Lan&#231ado em: </td>'+
+						'<td id="released">' + movie.released + '</td>'+
+					'</tr>'+
+					'<tr>'+
+						'<td>G&ecirc;nero: </td>'+
+						'<td id="genre">' + movie.genre + '</td>'+
+					'</tr>';
+			}
+		},
+		error: function() {
+			movie = "";
+			if(document.getElementById('loading')) {
+				document.getElementById('loading').style.display = "none";
+			}
+			document.getElementById('bodyTable').innerHTML = '<tr><td>vazio</td><td>vazio</td></tr>';
+		}
+	});
+}
+
+function movieDelete(idBD) {
+	if(idBD) {
+		choice = confirm("Deseja mesmo deletar este item???");
+		if (choice){
+			$.ajax({
+				type:'POST',
+				url: '/movieserver/rest/action/deteleByID',
+				dataType: 'json',
+				data : {'idBD': idBD},
+				headers: { 
+			        'Accept': 'application/json',
+			        'Content-Type': 'application/json' 
+			    },
+				success: function(result) {
+					if(result == true) {
+						document.getElementById('bodyTable').innerHTML = 
+							'<tr>'+
+								'<td></td>'+
+								'<td id="title">Item Deletado com sucesso!</td>'+
+							'</tr>';
+					} else {
+						document.getElementById('bodyTable').innerHTML = 
+							'<tr>'+
+								'<td></td>'+
+								'<td id="title">"Erro! Não foi possível deletar o item!!!</td>'+
+							'</tr>';
+					}
+					if(document.getElementById('linkEdit')) {
+						document.getElementById('linkEdit').style.display = "none";
+					}
+					if(document.getElementById('linkDelete')) {
+						document.getElementById('linkDelete').style.display = "none";
+					}
+				},
+				error: function() {
+					movie = "";
+					document.getElementById('bodyTable').innerHTML = 
+						'<tr>'+
+							'<td></td>'+
+							'<td id="title">"Erro! Não foi possível deletar o item!!!</td>'+
+						'</tr>';
+					if(document.getElementById('linkEdit')) {
+						document.getElementById('linkEdit').style.display = "none";
+					}
+					if(document.getElementById('linkDelete')) {
+						document.getElementById('linkDelete').style.display = "none";
+					}
+				}
+			});
+		}
+	}
+}
+
+function getParam() {
+    var result = {}; 
+    var keyValues = location.search.slice(1).split("&");
+  	keyValues.forEach(function(keyValue) {
+  		keyValue = keyValue.split('=');
+        result[decodeURIComponent(keyValue[0])] = decodeURIComponent(keyValue[1]) || '';
+    });
+ 	getMovies(result["movieId"]);
+}
+
+function redirectBack() {
+	var redirect = window.location.protocol + "//" + window.location.host + "/";
+	if(movie.title) {
+		redirect += 'movieclient/index.html?title=' + movie.title;
+	} else {
+		redirect += 'movieclient/index.html';
+	}
+	window.location = redirect;
+}
+</script>
+	<head>
+		<meta charset="UTF-8">
+		<title>Detalhes</title>
+	</head>
+	<body>
+		<table>
+			<thead>
+				<tr>
+					<th>
+						<img id="loading" src="img/ajax-loader.gif"> Detalhes
+						<a id="linkEdit" href="#" style="display:none;" >Editar</a>
+						<a id="linkDelete" onclick="movieDelete(movie.id)" href="#" style="display:none;" >Deletar</a>
+					</th>
+				</tr>
+			</thead>
+			<tbody id="bodyTable">
+			</tbody>
+		</table>
+		<button onclick="redirectBack();" type="button">&lt;&lt;</button>
+	</body>
+	<script>
+		getParam();
+	</script>
+</html>

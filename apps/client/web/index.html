@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+	<head>
+	  	<meta charset="UTF-8">
+	    <title>Projeto WEB - Client Side</title>
+		<script type="text/javascript" src="js/jquery-1.12.4.min.js"></script>
+	  	<script type="text/javascript">
+	  	function getMovies(){
+	  		document.getElementById('bodyTable').innerHTML = "";
+	  		if(document.getElementById('title')) {
+	  			if(document.getElementById('loading')) {
+					document.getElementById('loading').style.display = "";
+				}
+		  		var param = document.getElementById('title').value;
+		  		$.ajax({
+					type:'GET',
+					url: '/movieserver/rest/action/'+param,
+					headers: {
+						Accept : "application/json; charset=utf-8",
+						"Content-Type" : "application/json; charset=utf-8"
+					},
+					success: function(result) {
+						var movies = result;
+						if(document.getElementById('loading')) {
+							document.getElementById('loading').style.display = "none";
+						}
+						var i;
+		  				for (i=0; i < movies.length; i++) {
+		  					document.getElementById('bodyTable').innerHTML += 
+		  						'<tr>'+
+		  							'<td>' + movies[i].title + '</td>'+
+		  							'<td>'+ movies[i].type +'</td>'+
+		  							'<td><a href="movieDetail.html?movieId='+ movies[i].imdbID +'">Detalhes</a></td>'+
+		  						'</tr>';
+		  				}
+		  				
+					},
+					error: function() {
+						if(document.getElementById('loading')) {
+							document.getElementById('loading').style.display = "none";
+						}
+						document.getElementById('bodyTable').innerHTML = '<tr><td>vazio</td><td>vazio</td></tr>';
+					}
+				});
+	  		}
+	  	}
+
+	  	function reload(){
+	  		if(document.getElementById('title')) {
+	  			if(document.getElementById('title').value != "") {
+	  				getMovies();
+	  			}
+	  		}
+	  	}
+	  	
+	  	function getParam() {
+	  		var result = {}; 
+	  		var keyValues = location.search.slice(1).split("&");
+	  		keyValues.forEach(function(keyValue) {
+	  			keyValue = keyValue.split('=');
+	  		     result[decodeURIComponent(keyValue[0])] = decodeURIComponent(keyValue[1]) || '';
+	  		});
+	  		if(result["title"]) {
+	  			document.getElementById('title').value = result["title"];
+	  		}
+	  		reload();
+	  	}
+	  	
+	  	function getMoviesEnter(e){
+	  		var keycode;
+	  		if (window.event) {
+	  			keycode = window.event.keyCode;
+	  		} else if (e) {
+	  			keycode = e.which;
+	  		} else { 
+	  			return true;
+	  		}
+
+		  	if (keycode == 13) {
+		  		getMovies();
+		  		return false;
+		  	} else {
+		  		return true;
+		  	}
+	  	}
+	  	</script>
+	</head>
+	<body>
+	    <h1>Busca Filmes e Seriados</h1>
+	    <div>
+	    	Nome do Filme: <input onkeypress="return getMoviesEnter(event)" id="title" type="text" name="title">
+	    	<button id="btSearch" onclick="getMovies()" type="button">Buscar</button>
+	    </div>
+	    <br>
+	    <table id="tabela">
+		    <thead>
+		    	<tr>
+		    		<th><img id="loading" src="img/ajax-loader.gif" style="display:none;"> Titulo</th>
+		    		<th>Tipo</th>
+		    		<th>Detalhes</th>
+		    	</tr>
+		    </thead>
+		    <tbody id="bodyTable">
+		    </tbody>
+	    </table>
+	</body>
+	<script type="text/javascript">
+		getParam();
+	</script>
+</html>
